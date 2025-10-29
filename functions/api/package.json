@@ -1,5 +1,4 @@
 {
-  "name": "api-functions-stub",
-  "version": "0.0.0",
-  "private": true
+  "private": true,
+  "main": "./[[path]].ts"
 }
