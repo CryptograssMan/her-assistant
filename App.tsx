@@ -84,7 +84,7 @@ const App: React.FC = () => {
         try {
           if (isDemo) {
             // In demo mode, we can use a service that returns mock data
-            const { getMockData } = await import('./services/googleApiService');
+            const { getMockData } = await import('./data/mockData');
             const { emails, calendarEvents, driveFiles } = getMockData();
             setEmails(emails);
             setCalendarEvents(calendarEvents);
