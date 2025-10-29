@@ -1,14 +1,13 @@
 export async function onRequestGet({ request, env }) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Content-Type': 'application/json',
-    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0'
+    'Cache-Control': 'no-store, max-age=0'
   };
 
+  // Handle CORS preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, { 
       status: 204,
@@ -17,28 +16,40 @@ export async function onRequestGet({ request, env }) {
   }
 
   try {
-    // Session check logic
-    const response = {
+    console.log('/me endpoint called');
+    
+    // For now, return a simple response to test
+    const userData = {
       authenticated: false,
       user: null,
-      message: "Session endpoint working"
+      timestamp: new Date().toISOString()
     };
 
     return new Response(
-      JSON.stringify(response),
+      JSON.stringify(userData),
       { 
         status: 200,
         headers: corsHeaders 
       }
     );
+    
   } catch (error) {
-    console.error('Error in /me endpoint:', error);
+    console.error('/me endpoint error:', error);
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: 'Internal server error',
+        message: error.message 
+      }),
       { 
         status: 500,
         headers: corsHeaders 
       }
     );
   }
+}
+
+// Also export for POST if needed
+export async function onRequestPost(context) {
+  return onRequestGet(context);
 }
