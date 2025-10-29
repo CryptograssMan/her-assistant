@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
-// Fix: Corrected import from `UpgradeWebSocket` type to `upgradeWebSocket` function.
-import { upgradeWebSocket } from 'hono/ws';
+// FIX: Corrected the import to use the PascalCase member 'UpgradeWebSocket' as suggested by the error.
+import { UpgradeWebSocket } from 'hono/ws';
 import { GoogleGenAI, Modality } from '@google/genai';
 import type { LiveServerMessage, Blob } from '@google/genai';
 
@@ -14,7 +14,7 @@ import type { LiveServerMessage, Blob } from '@google/genai';
 //
 // 1. GOOGLE_CLIENT_ID: Your Google OAuth Client ID.
 // 2. GOOGLE_CLIENT_SECRET: Your Google OAuth Client Secret.
-// 3. COOKIE_SECRET: A long, random string (at least 32 characters) for encrypting
+// 3. COOKIE_SECRET: A long, a random string (at least 32 characters) for encrypting
 //    the session cookie. You can generate one using an online tool.
 // 4. API_KEY: Your Google AI (Gemini) API key.
 // ====================================================================================
@@ -286,8 +286,8 @@ const sessionSocketMiddleware = async (c: any, next: Function) => {
 app.get(
     '/api/gemini/live',
     sessionSocketMiddleware,
-    // Fix: Corrected function call from `UpgradeWebSocket` to `upgradeWebSocket`.
-    upgradeWebSocket((c) => {
+    // FIX: Corrected the usage of the WebSocket upgrade handler to use the PascalCase member.
+    UpgradeWebSocket((c) => {
         let geminiSessionPromise: Promise<any> | null = null;
     
         return {
