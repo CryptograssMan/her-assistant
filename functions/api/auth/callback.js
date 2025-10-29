@@ -3,35 +3,51 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   
+  console.log('Callback started, code received:', !!code);
+  console.log('Client ID exists:', !!env.GOOGLE_CLIENT_ID);
+  console.log('Client Secret exists:', !!env.GOOGLE_CLIENT_SECRET);
+  
   if (!code) {
+    console.error('No code parameter');
     return Response.redirect(url.origin + '/?error=no_code', 302);
   }
 
   try {
+    const tokenPayload = {
+      code,
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: url.origin + '/api/auth/callback',
+      grant_type: 'authorization_code'
+    };
+    
+    console.log('Requesting token exchange...');
+    
     // Exchange code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        code,
-        client_id: env.GOOGLE_CLIENT_ID,
-        client_secret: env.GOOGLE_CLIENT_SECRET,
-        redirect_uri: url.origin + '/api/auth/callback',
-        grant_type: 'authorization_code'
-      })
+      body: JSON.stringify(tokenPayload)
     });
 
+    const tokenStatus = tokenResponse.status;
+    console.log('Token response status:', tokenStatus);
+
     if (!tokenResponse.ok) {
-      console.error('Token exchange failed:', await tokenResponse.text());
+      const errorText = await tokenResponse.text();
+      console.error('Token exchange failed:', errorText);
       return Response.redirect(url.origin + '/?error=token_failed', 302);
     }
 
     const tokens = await tokenResponse.json();
+    console.log('Tokens received, has access_token:', !!tokens.access_token);
     
     // Get user info from Google
     const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { 'Authorization': `Bearer ${tokens.access_token}` }
     });
+
+    console.log('User info response status:', userResponse.status);
 
     if (!userResponse.ok) {
       console.error('User info fetch failed');
@@ -39,6 +55,7 @@ export async function onRequest(context) {
     }
 
     const userInfo = await userResponse.json();
+    console.log('User info received:', userInfo.email);
     
     // Create session data
     const sessionData = {
@@ -55,9 +72,11 @@ export async function onRequest(context) {
       }
     };
 
-    // Store session in a cookie (temporary solution)
+    // Store session in a cookie
     const sessionJson = JSON.stringify(sessionData);
     const sessionBase64 = btoa(sessionJson);
+    
+    console.log('Session created, redirecting to home');
     
     // Redirect back to home with session cookie
     return new Response(null, {
@@ -70,6 +89,8 @@ export async function onRequest(context) {
 
   } catch (error) {
     console.error('OAuth callback error:', error);
-    return Response.redirect(url.origin + '/?error=auth_failed', 302);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    return Response.redirect(url.origin + '/?error=auth_failed&msg=' + encodeURIComponent(error.message), 302);
   }
 }
