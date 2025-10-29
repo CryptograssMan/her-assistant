@@ -1,0 +1,7 @@
+{
+  "name": "HER - Super Executive Assistant",
+  "description": "An AI-powered executive assistant that uses real-time voice conversation to help you manage your work life. It can flag important emails, manage your calendar, and compose replies, all through a Gen Z-friendly interface.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
