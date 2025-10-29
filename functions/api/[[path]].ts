@@ -1,7 +1,6 @@
-import { Hono, type Context, type Next } from 'hono';
+import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
-// Fix: Corrected casing of upgradeWebSocket to UpgradeWebSocket based on the error message.
-import { UpgradeWebSocket } from 'hono/ws';
+import { upgradeWebSocket } from 'hono/ws';
 import { GoogleGenAI, Modality } from '@google/genai';
 import type { LiveServerMessage, Blob } from '@google/genai';
 
@@ -14,7 +13,7 @@ import type { LiveServerMessage, Blob } from '@google/genai';
 //
 // 1. GOOGLE_CLIENT_ID: Your Google OAuth Client ID.
 // 2. GOOGLE_CLIENT_SECRET: Your Google OAuth Client Secret.
-// 3. COOKIE_SECRET: A long, a random string (at least 32 characters) for encrypting
+// 3. COOKIE_SECRET: A long, random string (at least 32 characters) for encrypting
 //    the session cookie. You can generate one using an online tool.
 // 4. API_KEY: Your Google AI (Gemini) API key.
 // ====================================================================================
@@ -39,7 +38,7 @@ type Session = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-const getCryptoKey = async (c: Context) => {
+const getCryptoKey = async (c: any) => {
     const secret = c.env.COOKIE_SECRET;
     if (secret.length < 32) {
         throw new Error("COOKIE_SECRET must be at least 32 characters long.");
@@ -55,7 +54,7 @@ const getCryptoKey = async (c: Context) => {
 };
 
 // Reusable function to get session from cookie
-const getSession = async (c: Context): Promise<Session | null> => {
+const getSession = async (c: any): Promise<Session | null> => {
     const encryptedSessionCookie = getCookie(c, 'auth_session');
     if (!encryptedSessionCookie) {
         return null;
@@ -272,7 +271,7 @@ app.get('/api/data', async (c) => {
 // --- Gemini Live API WebSocket Proxy ---
 
 // Hono v4 Middleware to protect the WebSocket route by checking the session
-const sessionSocketMiddleware = async (c: Context, next: Next) => {
+const sessionSocketMiddleware = async (c: any, next: Function) => {
     const session = await getSession(c);
     if (!session) {
         // For WebSockets, we can't send a redirect. We must return a normal response
@@ -286,8 +285,7 @@ const sessionSocketMiddleware = async (c: Context, next: Next) => {
 app.get(
     '/api/gemini/live',
     sessionSocketMiddleware,
-    // Fix: Corrected casing of upgradeWebSocket to UpgradeWebSocket based on the error message.
-    UpgradeWebSocket((c) => {
+    upgradeWebSocket((c) => {
         let geminiSessionPromise: Promise<any> | null = null;
     
         return {
@@ -296,13 +294,13 @@ app.get(
 
                 if (message.type === 'start') {
                     try {
-                        // Use app.request to internally call our own /data endpoint.
+                        // Use app.request to internally call our own /api/data endpoint.
                         // This reuses the logic and correctly forwards the auth cookie.
                         const dataResponse = await app.request('/api/data', { headers: c.req.raw.headers });
                         
                         // Check if the internal request was successful
                         if (!dataResponse.ok) {
-                           console.error(`Internal /data call failed with status: ${dataResponse.status}`);
+                           console.error(`Internal /api/data call failed with status: ${dataResponse.status}`);
                            ws.close(1011, 'Internal authentication error');
                            return;
                         }
