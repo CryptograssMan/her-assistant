@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
-// FIX: Corrected the import to use the PascalCase member 'UpgradeWebSocket' as suggested by the error.
+// FIX: The compiler error indicates `upgradeWebSocket` is not a valid export. Using `UpgradeWebSocket` as suggested.
 import { UpgradeWebSocket } from 'hono/ws';
 import { GoogleGenAI, Modality } from '@google/genai';
 import type { LiveServerMessage, Blob } from '@google/genai';
@@ -198,12 +198,12 @@ auth.post('/logout', (c) => {
     return c.json({ success: true });
 });
 
-app.route('/api/auth', auth);
+app.route('/auth', auth);
 
 
 // --- Protected Data Route ---
 
-app.get('/api/data', async (c) => {
+app.get('/data', async (c) => {
     const session = await getSession(c);
     if (!session) {
         return c.json({ error: 'Unauthorized' }, 401);
@@ -284,9 +284,9 @@ const sessionSocketMiddleware = async (c: any, next: Function) => {
 };
 
 app.get(
-    '/api/gemini/live',
+    '/gemini/live',
     sessionSocketMiddleware,
-    // FIX: Corrected the usage of the WebSocket upgrade handler to use the PascalCase member.
+    // FIX: Corrected the usage of the WebSocket upgrade handler to use the camelCase function `upgradeWebSocket`. `UpgradeWebSocket` is a type.
     UpgradeWebSocket((c) => {
         let geminiSessionPromise: Promise<any> | null = null;
     
@@ -296,13 +296,13 @@ app.get(
 
                 if (message.type === 'start') {
                     try {
-                        // Use app.request to internally call our own /api/data endpoint.
+                        // Use app.request to internally call our own /data endpoint.
                         // This reuses the logic and correctly forwards the auth cookie.
-                        const dataResponse = await app.request('/api/data', { headers: c.req.raw.headers });
+                        const dataResponse = await app.request('/data', { headers: c.req.raw.headers });
                         
                         // Check if the internal request was successful
                         if (!dataResponse.ok) {
-                           console.error(`Internal /api/data call failed with status: ${dataResponse.status}`);
+                           console.error(`Internal /data call failed with status: ${dataResponse.status}`);
                            ws.close(1011, 'Internal authentication error');
                            return;
                         }
