@@ -1,6 +1,6 @@
 import { Hono, type Context, type Next } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
-// FIX: Corrected casing for UpgradeWebSocket import
+// Fix: Corrected casing of upgradeWebSocket to UpgradeWebSocket based on the error message.
 import { UpgradeWebSocket } from 'hono/ws';
 import { GoogleGenAI, Modality } from '@google/genai';
 import type { LiveServerMessage, Blob } from '@google/genai';
@@ -286,7 +286,7 @@ const sessionSocketMiddleware = async (c: Context, next: Next) => {
 app.get(
     '/api/gemini/live',
     sessionSocketMiddleware,
-    // FIX: Corrected casing for UpgradeWebSocket function call
+    // Fix: Corrected casing of upgradeWebSocket to UpgradeWebSocket based on the error message.
     UpgradeWebSocket((c) => {
         let geminiSessionPromise: Promise<any> | null = null;
     
