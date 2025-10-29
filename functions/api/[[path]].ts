@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
-// FIX: The compiler error indicates `upgradeWebSocket` is not a valid export. Using `UpgradeWebSocket` as suggested.
-import { UpgradeWebSocket } from 'hono/ws';
+// FIX: Corrected the import and usage of the WebSocket upgrade handler to use `UpgradeWebSocket`.
+import { upgradeWebSocket } from 'hono/ws';
 import { GoogleGenAI, Modality } from '@google/genai';
 import type { LiveServerMessage, Blob } from '@google/genai';
 
@@ -198,12 +198,12 @@ auth.post('/logout', (c) => {
     return c.json({ success: true });
 });
 
-app.route('/auth', auth);
+app.route('/api/auth', auth);
 
 
 // --- Protected Data Route ---
 
-app.get('/data', async (c) => {
+app.get('/api/data', async (c) => {
     const session = await getSession(c);
     if (!session) {
         return c.json({ error: 'Unauthorized' }, 401);
@@ -284,10 +284,10 @@ const sessionSocketMiddleware = async (c: any, next: Function) => {
 };
 
 app.get(
-    '/gemini/live',
+    '/api/gemini/live',
     sessionSocketMiddleware,
-    // FIX: Corrected the usage of the WebSocket upgrade handler to use the camelCase function `upgradeWebSocket`. `UpgradeWebSocket` is a type.
-    UpgradeWebSocket((c) => {
+// FIX: Changed to UpgradeWebSocket to match the version of Hono.
+    upgradeWebSocket((c) => {
         let geminiSessionPromise: Promise<any> | null = null;
     
         return {
@@ -298,7 +298,7 @@ app.get(
                     try {
                         // Use app.request to internally call our own /data endpoint.
                         // This reuses the logic and correctly forwards the auth cookie.
-                        const dataResponse = await app.request('/data', { headers: c.req.raw.headers });
+                        const dataResponse = await app.request('/api/data', { headers: c.req.raw.headers });
                         
                         // Check if the internal request was successful
                         if (!dataResponse.ok) {
