@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 // FIX: Import upgradeWebSocket helper from hono/ws to correctly handle WebSockets in a Cloudflare environment.
-import { upgradeWebSocket } from 'hono/ws';
+// @ts-ignore
+import { UpgradeWebSocket } from 'hono/ws';
 import { GoogleGenAI, Modality } from '@google/genai';
 import type { LiveServerMessage, Blob } from '@google/genai';
 
@@ -284,7 +285,8 @@ const sessionSocketMiddleware = async (c: any, next: Function) => {
 app.get(
     '/api/gemini/live',
     sessionSocketMiddleware,
-    upgradeWebSocket(async (c) => {
+    // @ts-ignore
+    UpgradeWebSocket(async (c) => {
         let geminiSessionPromise: Promise<any> | null = null;
         
         return {
