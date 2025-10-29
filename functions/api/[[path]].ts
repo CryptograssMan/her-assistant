@@ -1,7 +1,7 @@
-import { Hono } from 'hono';
+import { Hono, type Context, type Next } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
-// FIX: Corrected the import and usage of the WebSocket upgrade handler to use `UpgradeWebSocket`.
-import { upgradeWebSocket } from 'hono/ws';
+// FIX: Corrected casing for UpgradeWebSocket import
+import { UpgradeWebSocket } from 'hono/ws';
 import { GoogleGenAI, Modality } from '@google/genai';
 import type { LiveServerMessage, Blob } from '@google/genai';
 
@@ -39,7 +39,7 @@ type Session = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-const getCryptoKey = async (c: any) => {
+const getCryptoKey = async (c: Context) => {
     const secret = c.env.COOKIE_SECRET;
     if (secret.length < 32) {
         throw new Error("COOKIE_SECRET must be at least 32 characters long.");
@@ -55,7 +55,7 @@ const getCryptoKey = async (c: any) => {
 };
 
 // Reusable function to get session from cookie
-const getSession = async (c: any): Promise<Session | null> => {
+const getSession = async (c: Context): Promise<Session | null> => {
     const encryptedSessionCookie = getCookie(c, 'auth_session');
     if (!encryptedSessionCookie) {
         return null;
@@ -272,7 +272,7 @@ app.get('/api/data', async (c) => {
 // --- Gemini Live API WebSocket Proxy ---
 
 // Hono v4 Middleware to protect the WebSocket route by checking the session
-const sessionSocketMiddleware = async (c: any, next: Function) => {
+const sessionSocketMiddleware = async (c: Context, next: Next) => {
     const session = await getSession(c);
     if (!session) {
         // For WebSockets, we can't send a redirect. We must return a normal response
@@ -286,8 +286,8 @@ const sessionSocketMiddleware = async (c: any, next: Function) => {
 app.get(
     '/api/gemini/live',
     sessionSocketMiddleware,
-// FIX: Changed to UpgradeWebSocket to match the version of Hono.
-    upgradeWebSocket((c) => {
+    // FIX: Corrected casing for UpgradeWebSocket function call
+    UpgradeWebSocket((c) => {
         let geminiSessionPromise: Promise<any> | null = null;
     
         return {
