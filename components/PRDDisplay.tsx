@@ -56,7 +56,7 @@ const PRDDisplay: React.FC = () => {
               <strong>Dark Theme & Gen Z Aesthetics:</strong> The UI will be exclusively a dark theme, utilizing modern fonts, vibrant gradients, and subtle animations to create an engaging and visually pleasing experience.
             </li>
           </ul>
-        </section>
+        </Section>
         
         <Section title="4. Future Phases (Post-MVP)">
            <ul className="list-disc list-inside space-y-2">
