@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
+// FIX: Import upgradeWebSocket helper from hono/ws to correctly handle WebSockets in a Cloudflare environment.
 import { upgradeWebSocket } from 'hono/ws';
 import { GoogleGenAI, Modality } from '@google/genai';
 import type { LiveServerMessage, Blob } from '@google/genai';
@@ -270,35 +271,30 @@ app.get('/api/data', async (c) => {
 
 // --- Gemini Live API WebSocket Proxy ---
 
-// Hono v4 Middleware to protect the WebSocket route by checking the session
 const sessionSocketMiddleware = async (c: any, next: Function) => {
     const session = await getSession(c);
     if (!session) {
-        // For WebSockets, we can't send a redirect. We must return a normal response
-        // to deny the upgrade request. The client will receive an error.
         return new Response('Unauthorized', { status: 401 });
     }
-    // Session is valid, proceed to the WebSocket upgrader
     await next();
 };
 
+// FIX: Refactor WebSocket handling to use Hono's `upgradeWebSocket` helper.
+// This simplifies the code and fixes TypeScript errors related to Cloudflare Workers-specific WebSocket APIs.
 app.get(
     '/api/gemini/live',
     sessionSocketMiddleware,
-    upgradeWebSocket((c) => {
+    upgradeWebSocket(async (c) => {
         let geminiSessionPromise: Promise<any> | null = null;
-    
+        
         return {
             onMessage: async (evt, ws) => {
                 const message = JSON.parse(evt.data as string);
 
                 if (message.type === 'start') {
                     try {
-                        // Use app.request to internally call our own /api/data endpoint.
-                        // This reuses the logic and correctly forwards the auth cookie.
                         const dataResponse = await app.request('/api/data', { headers: c.req.raw.headers });
                         
-                        // Check if the internal request was successful
                         if (!dataResponse.ok) {
                            console.error(`Internal /api/data call failed with status: ${dataResponse.status}`);
                            ws.close(1011, 'Internal authentication error');
@@ -361,6 +357,7 @@ Do not mention that you have this context unless the user asks a question that r
                      geminiSession.sendRealtimeInput({ media: pcmBlob });
                 }
             },
+
             onClose: async () => {
                 if (geminiSessionPromise) {
                     const geminiSession = await geminiSessionPromise;
@@ -368,11 +365,13 @@ Do not mention that you have this context unless the user asks a question that r
                     console.log('Gemini session closed.');
                 }
             },
+
             onError: (err) => {
                 console.error('WebSocket error:', err);
             },
-        };
+        }
     })
 );
+
 
 export default app;
