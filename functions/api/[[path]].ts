@@ -1,8 +1,7 @@
 import { Hono } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
-// FIX: Use `upgradeWebSocket` (function) instead of `UpgradeWebSocket` (type) for WebSocket handling.
-// Per compiler error, using UpgradeWebSocket as it seems to be the exported function.
-import { UpgradeWebSocket } from 'hono/ws';
+// Fix: Corrected import from `UpgradeWebSocket` type to `upgradeWebSocket` function.
+import { upgradeWebSocket } from 'hono/ws';
 import { GoogleGenAI, Modality } from '@google/genai';
 import type { LiveServerMessage, Blob } from '@google/genai';
 
@@ -287,9 +286,8 @@ const sessionSocketMiddleware = async (c: any, next: Function) => {
 app.get(
     '/api/gemini/live',
     sessionSocketMiddleware,
-    // FIX: Use `upgradeWebSocket` (function) instead of `UpgradeWebSocket` (type) for WebSocket handling.
-    // Per compiler error, using UpgradeWebSocket as it seems to be the exported function.
-    UpgradeWebSocket((c) => {
+    // Fix: Corrected function call from `UpgradeWebSocket` to `upgradeWebSocket`.
+    upgradeWebSocket((c) => {
         let geminiSessionPromise: Promise<any> | null = null;
     
         return {
