@@ -120,9 +120,8 @@ export const startConversation = async (params: StartConversationParams): Promis
 
   microphoneStream = stream;
 
-  // Setup WebSocket connection
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  webSocket = new WebSocket(`${protocol}//${window.location.host}/api/gemini/live`);
+  // Setup WebSocket connection to Cloudflare Worker
+  webSocket = new WebSocket('wss://her-assistant-websocket.pinoywheatgrass.workers.dev');
 
   webSocket.onerror = onError;
   webSocket.onclose = () => {
