@@ -61,16 +61,18 @@ const SkeletonLoader: React.FC = () => (
 
 const Dashboard: React.FC<DashboardProps> = ({ vips, onAddVip, onRemoveVip, emails, calendarEvents, driveFiles, isLoading, error }) => {
     
+    // FIX: Handle both 'from' and 'sender' fields, with null safety
     const priorityEmails = emails.map(email => {
-        const isVip = vips.some(vip => email.sender.toLowerCase().includes(vip.toLowerCase()));
-        return { ...email, isVip };
+        const sender = email.from || email.sender || 'Unknown';
+        const isVip = vips.some(vip => sender.toLowerCase().includes(vip.toLowerCase()));
+        return { ...email, isVip, sender };
     }).sort((a, b) => (b.isVip ? 1 : 0) - (a.isVip ? 1 : 0));
 
   return (
     <div className="space-y-12">
       <div className="text-center">
         <h1 className="text-5xl font-bold tracking-tight">Good Morning</h1>
-        <p className="text-gray-400 mt-2 text-lg">Here’s what’s on your plate today.</p>
+        <p className="text-gray-400 mt-2 text-lg">Here's what's on your plate today.</p>
       </div>
 
       {isLoading && <SkeletonLoader />}
@@ -87,9 +89,9 @@ const Dashboard: React.FC<DashboardProps> = ({ vips, onAddVip, onRemoveVip, emai
             <div className="space-y-4">
               {calendarEvents.length > 0 ? calendarEvents.map(event => (
                 <div key={event.id} className="p-4 bg-gray-800/60 rounded-lg">
-                  <p className="font-bold text-purple-400">{event.time}</p>
-                  <p className="font-semibold text-gray-200">{event.title}</p>
-                  <p className="text-sm text-gray-400">{event.attendees.join(', ')}</p>
+                  <p className="font-bold text-purple-400">{event.time || 'No time'}</p>
+                  <p className="font-semibold text-gray-200">{event.title || 'Untitled event'}</p>
+                  <p className="text-sm text-gray-400">{event.attendees?.join(', ') || 'No attendees'}</p>
                 </div>
               )) : <p className="text-gray-500">Your calendar is clear today.</p>}
             </div>
@@ -108,8 +110,8 @@ const Dashboard: React.FC<DashboardProps> = ({ vips, onAddVip, onRemoveVip, emai
                     <p className="font-semibold text-gray-200">{email.sender}</p>
                     {email.isVip && <span className="text-xs font-bold bg-pink-500 text-white px-2 py-1 rounded-full">VIP</span>}
                   </div>
-                  <p className="font-medium text-gray-300 mt-1">{email.subject}</p>
-                  <p className="text-sm text-gray-500 mt-1 truncate">{email.snippet}</p>
+                  <p className="font-medium text-gray-300 mt-1">{email.subject || 'No subject'}</p>
+                  <p className="text-sm text-gray-500 mt-1 truncate">{email.snippet || ''}</p>
                 </div>
               )) : <p className="text-gray-500">Your inbox is clear.</p>}
             </div>
@@ -124,8 +126,8 @@ const Dashboard: React.FC<DashboardProps> = ({ vips, onAddVip, onRemoveVip, emai
             <div className="space-y-3">
               {driveFiles.length > 0 ? driveFiles.map(file => (
                 <a key={file.id} href={file.webViewLink} target="_blank" rel="noopener noreferrer" className="block p-4 bg-gray-800/60 rounded-lg hover:bg-gray-800/80 transition-colors duration-200">
-                  <p className="font-semibold text-gray-200 truncate">{file.name}</p>
-                  <p className="text-sm text-gray-500 mt-1">Modified: {file.modifiedTime}</p>
+                  <p className="font-semibold text-gray-200 truncate">{file.name || 'Untitled'}</p>
+                  <p className="text-sm text-gray-500 mt-1">Modified: {file.modifiedTime || 'Unknown'}</p>
                 </a>
               )) : <p className="text-gray-500">No recent files found.</p>}
             </div>
