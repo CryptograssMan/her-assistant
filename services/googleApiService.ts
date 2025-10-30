@@ -1,24 +1,19 @@
-import type { Email, CalendarEvent, DriveFile } from '../types';
+export const fetchDashboardData = async () => {
+  const [emailsRes, calendarRes, driveRes] = await Promise.all([
+    fetch('/api/google/emails', { credentials: 'include' }),
+    fetch('/api/google/calendar', { credentials: 'include' }),
+    fetch('/api/google/drive', { credentials: 'include' })
+  ]);
 
-interface DashboardData {
-    emails: Email[];
-    calendarEvents: CalendarEvent[];
-    driveFiles: DriveFile[];
-}
+  if (!emailsRes.ok || !calendarRes.ok || !driveRes.ok) {
+    throw new Error('Unauthorized');
+  }
 
-/**
- * Fetches dashboard data (emails, calendar events) from our secure backend.
- * The backend handles the authentication and calls the Google APIs.
- */
-export const fetchDashboardData = async (): Promise<DashboardData> => {
-    console.log('Fetching dashboard data from secure backend...');
-    const response = await fetch('/api/data');
+  const [emails, calendarEvents, driveFiles] = await Promise.all([
+    emailsRes.json(),
+    calendarRes.json(),
+    driveRes.json()
+  ]);
 
-    if (!response.ok) {
-        if (response.status === 401) {
-            throw new Error('Unauthorized: Session may be expired.');
-        }
-        throw new Error('Failed to fetch dashboard data from the server.');
-    }
-    return response.json();
+  return { emails, calendarEvents, driveFiles };
 };
